@@ -1,0 +1,273 @@
+﻿using ClosedXML.Excel;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace ZarkovDataInformer
+{
+    public partial class Form1 : Form
+    {
+        DataTable _outputDataTable = new DataTable();
+        IMongoCollection<BsonDocument> _collection = null;
+        Dictionary<string, List<BsonDateTime>> _dataCache = new Dictionary<string, List<BsonDateTime>>();
+        List<string> test_types = new List<string>();
+        public Form1()
+        {
+            InitializeComponent();
+            this.textBoxPort.KeyPress += new KeyPressEventHandler(textBoxPort_KeyPress);
+        }
+
+        private void connect_Server_On()
+        {
+            Cursor.Current = Cursors.WaitCursor;
+            pictureBoxConnecting.Visible = true;
+            comboBoxSevers.Enabled = false;
+            textBoxPort.Enabled = false;
+            connect_Server.Enabled = false;
+            Cursor.Current = Cursors.Arrow;
+        }
+
+        private void connect_Server_Off()
+        {
+            Cursor.Current = Cursors.Arrow;
+            comboBoxTestType.DataSource = test_types;
+            pictureBoxConnecting.Visible = false;
+            comboBoxSevers.Enabled = true;
+            textBoxPort.Enabled = true;
+            connect_Server.Enabled = true;
+            comboBoxEndDate.Enabled = true;
+            comboBoxTestType.Enabled = true;
+            buttonShowData.Enabled = true;
+            labelStatusDesc.Text = "Connected!!";
+            Cursor.Current = Cursors.WaitCursor;
+        
+        }
+
+        private void connect_Server_Click(object sender, EventArgs e)
+        {
+
+            connect_Server_On();
+            List<object> items = new List<object>();
+            items.Add(comboBoxSevers.SelectedIndex);
+            items.Add(textBoxPort.Text);
+            backgroundWorker2.RunWorkerAsync(items);
+
+
+            
+        }
+
+        private IMongoCollection<BsonDocument> connectServerAndGetCollection(string connection, string dbName, string collection)
+        {
+            try
+            {
+                return new MongoClient(connection).GetDatabase(dbName).GetCollection<BsonDocument>(collection);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
+                return null;
+            }
+        }
+
+        private void Loading_On()
+        {
+            Cursor.Current = Cursors.WaitCursor;
+            pictureBoxLoading.Visible = true;
+            comboBoxEndDate.Enabled = false;
+            comboBoxTestType.Enabled = false;
+            buttonConvertToExcel.Enabled = false;
+            buttonShowData.Enabled = false;
+            Cursor.Current = Cursors.Arrow;
+        }
+
+        private void Loading_Off()
+        {
+            Cursor.Current = Cursors.Arrow;
+            pictureBoxLoading.Visible = false;
+            comboBoxEndDate.Enabled = true;
+            comboBoxTestType.Enabled = true;
+            buttonConvertToExcel.Enabled = true;
+            buttonShowData.Enabled = true;
+            Cursor.Current = Cursors.WaitCursor;
+        }
+
+        private void loadFields()
+        {
+            var filter = new BsonDocument();
+            try
+            {
+                test_types = _collection.Distinct<String>("test_type", filter).ToList();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
+            }
+            finally
+            {
+                
+            }
+        }
+
+        public DataTable convertListToDataTable(List<BsonDocument> list)
+        {
+            if (list != null && list.Count() > 0)
+            {
+                DataTable dt = new DataTable(list.ToString());
+                foreach (BsonDocument doc in list)
+                {
+                    foreach (BsonElement elm in doc.Elements)
+                    {
+                        if (!dt.Columns.Contains(elm.Name))
+                            dt.Columns.Add(new DataColumn(elm.Name));
+                    }
+                    DataRow dr = dt.NewRow();
+                    foreach (BsonElement elm in doc.Elements)
+                        dr[elm.Name] = elm.Value;
+                    dt.Rows.Add(dr);
+                }
+                return dt;
+            }
+            return null;
+        }
+
+        private void buttonShowData_Click(object sender, EventArgs e)
+        {
+            Loading_On();
+            List<object> items = new List<object>();
+            items.Add(comboBoxTestType.SelectedItem);
+            items.Add(comboBoxEndDate.SelectedItem);
+            backgroundWorker1.RunWorkerAsync(items);
+
+        }
+
+        private void comboBoxTestType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var test_type = comboBoxTestType.SelectedItem;
+            var filter = new BsonDocument().Add("test_type", test_type.ToString());
+            if (_dataCache.ContainsKey(test_type.ToString()))
+            {
+                var top10_Sorted_Dates = _dataCache[test_type.ToString()];
+                comboBoxEndDate.DataSource = top10_Sorted_Dates;
+            }
+            else
+            {
+                var end_dates = _collection.Distinct<BsonDateTime>("end_dt", filter).ToList();
+                var sorted_Dates = from element in end_dates
+                                   orderby element descending
+                                   select element;
+                var top10_Sorted_Dates = sorted_Dates.Take(10).ToList();
+                _dataCache.Add(test_type.ToString(), top10_Sorted_Dates);
+                comboBoxEndDate.DataSource = top10_Sorted_Dates;
+            }
+        }
+
+        private void buttonConvertToExcel_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.Filter = "Excel |*.xlsx";
+            saveFileDialog1.Title = "Save an excel File";
+            saveFileDialog1.ShowDialog();
+
+            // If the file name is not an empty string open it for saving.
+            if (saveFileDialog1.FileName != "")
+            {
+                try
+                {
+                    var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
+                    workbook.SaveAs(saveFileDialog1.FileName);
+                    MessageBox.Show("Save Successful!!!", "Message!!!");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
+                }
+            }
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var comboBoxValues = e.Argument as List<object>;
+            var testType = comboBoxValues[0];
+            var endDate = comboBoxValues[1];
+            var builder = Builders<BsonDocument>.Filter;
+            var filter = builder.Eq("test_type", testType) & builder.Eq("end_dt", Convert.ToDateTime(endDate));
+            if (_collection != null)
+            {
+                var output = _collection.Find(filter).ToList();
+                _outputDataTable = convertListToDataTable(output);
+                if (_outputDataTable == null)
+                {
+                    MessageBox.Show("No Results to Display!!!", "Message!!!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("The Collection is Empty.", "Message!!!");
+            }
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // this runs on the UI thread
+            Loading_Off();
+            dataGridViewZarkov.DataSource = _outputDataTable;
+        }
+
+        private void textBoxPort_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxPort_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            const char Delete = (char)8;
+            e.Handled = !char.IsDigit(e.KeyChar) && e.KeyChar != Delete;
+        }
+
+        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var comboBoxValues = e.Argument as List<object>;
+            var index = Convert.ToInt16(comboBoxValues[0]);
+            var port = Convert.ToString(comboBoxValues[1]);
+            if (String.IsNullOrEmpty(port) || index == -1)
+            {
+                MessageBox.Show("Connection Failed!!\nPlease select the server name from drop down and enter server port in the box. Then, Try again.", "Error!!!");
+                /*comboBoxSevers.Enabled = true;
+                textBoxPort.Enabled = true;
+                connect_Server.Enabled = true;*/
+                e.Cancel = true;
+                return;
+            }
+            else if (index == 0) // Mulgrave Server
+            {
+                string conn = String.Format(@"mongodb://{0}:{1}", ConfigurationSettings.AppSettings.Get("MulgraveDBConectionString"), port);
+                _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
+                test_types = _collection.Distinct<String>("test_type", new BsonDocument()).ToList(); 
+            }
+            else if (index == 1) // COS Server
+            {
+                string conn = String.Format(@"mongodb://{0}:{1}", ConfigurationSettings.AppSettings.Get("COSDBConectionString"), port);
+                _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
+                test_types = _collection.Distinct<String>("test_type", new BsonDocument()).ToList(); //loadFields();
+            }
+        }
+
+        private void backgroundWorker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // this runs on the UI thread
+            connect_Server_Off();
+            //dataGridViewZarkov.DataSource = _outputDataTable;
+        }
+    }
+}
