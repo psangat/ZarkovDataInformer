@@ -19,6 +19,7 @@ namespace ZarkovDataInformer
         IMongoCollection<BsonDocument> _collection = null;
         Dictionary<int, Dictionary<string, List<BsonDateTime>>> _dataCache = new Dictionary<int, Dictionary<string, List<BsonDateTime>>>();
         List<string> test_types = new List<string>();
+
         public Form1()
         {
             InitializeComponent();
@@ -79,38 +80,7 @@ namespace ZarkovDataInformer
             connect_Server.Text = "Connect";
         }
 
-        private void connect_Server_Click(object sender, EventArgs e)
-        {
-            if (connect_Server.Text.Equals("Connect"))
-            {
-                connect_Server_On();
-                var servers = comboBoxSevers.SelectedItem == null ? comboBoxSevers.Text : comboBoxSevers.SelectedItem.ToString(); 
-                List<object> items = new List<object>();
-                items.Add(servers);
-                items.Add(textBoxPort.Text);
-                backgroundWorker2.RunWorkerAsync(items);
-            }
-            else if (connect_Server.Text.Equals("Disconnect"))
-            {
-                disconnect_Server();
-            }
-
-        }
-
-        private IMongoCollection<BsonDocument> connectServerAndGetCollection(string connection, string dbName, string collection)
-        {
-            try
-            {
-                return new MongoClient(connection).GetDatabase(dbName).GetCollection<BsonDocument>(collection);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
-                return null;
-            }
-        }
-
-        private void Loading_On()
+        private void loading_On()
         {
             Cursor.Current = Cursors.WaitCursor;
             dataGridViewZarkov.DataSource = new DataTable();
@@ -122,7 +92,7 @@ namespace ZarkovDataInformer
             Cursor.Current = Cursors.Arrow;
         }
 
-        private void Loading_Off()
+        private void loading_Off()
         {
             Cursor.Current = Cursors.Arrow;
             pictureBoxLoading.Visible = false;
@@ -142,7 +112,7 @@ namespace ZarkovDataInformer
             }
             catch (Exception ex)
             {
-                MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -150,35 +120,31 @@ namespace ZarkovDataInformer
             }
         }
 
-        public DataTable convertListToDataTable(List<BsonDocument> list)
-        {
-            if (list != null && list.Count() > 0)
-            {
-                DataTable dt = new DataTable(list.ToString());
-                foreach (BsonDocument doc in list)
-                {
-                    foreach (BsonElement elm in doc.Elements)
-                    {
-                        if (!dt.Columns.Contains(elm.Name))
-                            dt.Columns.Add(new DataColumn(elm.Name));
-                    }
-                    DataRow dr = dt.NewRow();
-                    foreach (BsonElement elm in doc.Elements)
-                        dr[elm.Name] = elm.Value;
-                    dt.Rows.Add(dr);
-                }
-                return dt;
-            }
-            return null;
-        }
-
         private void buttonShowData_Click(object sender, EventArgs e)
         {
-            Loading_On();
+            loading_On();
             List<object> items = new List<object>();
             items.Add(comboBoxTestType.SelectedItem);
             items.Add(comboBoxEndDate.SelectedItem);
             backgroundWorkerLoadData.RunWorkerAsync(items);
+
+        }
+
+        private void connect_Server_Click(object sender, EventArgs e)
+        {
+            if (connect_Server.Text.Equals("Connect"))
+            {
+                connect_Server_On();
+                var servers = comboBoxSevers.SelectedItem == null ? comboBoxSevers.Text : comboBoxSevers.SelectedItem.ToString();
+                List<object> items = new List<object>();
+                items.Add(servers);
+                items.Add(textBoxPort.Text);
+                backgroundWorker2.RunWorkerAsync(items);
+            }
+            else if (connect_Server.Text.Equals("Disconnect"))
+            {
+                disconnect_Server();
+            }
 
         }
 
@@ -220,72 +186,6 @@ namespace ZarkovDataInformer
             }
         }
 
-        private void buttonConvertToExcel_Click(object sender, EventArgs e)
-        {
-            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-            saveFileDialog1.Filter = "Excel |*.xlsx";
-            saveFileDialog1.Title = "Save an excel File";
-            saveFileDialog1.ShowDialog();
-
-            // If the file name is not an empty string open it for saving.
-            if (saveFileDialog1.FileName != "")
-            {
-                try
-                {
-                    var workbook = new XLWorkbook();
-                    var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
-                    pictureBoxLoading.Visible = true;
-                    workbook.SaveAs(saveFileDialog1.FileName);
-                    pictureBoxLoading.Visible = false;
-                    MessageBox.Show("Save Successful!!!", "Message!!!");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message));
-                }
-            }
-        }
-
-        private void backgroundWorkerLoadData_DoWork(object sender, DoWorkEventArgs e)
-        {
-            var comboBoxValues = e.Argument as List<object>;
-            var testType = comboBoxValues[0];
-            var endDate = comboBoxValues[1];
-            var builder = Builders<BsonDocument>.Filter;
-            var filter = builder.Eq(Constants.TestType, testType) & builder.Eq(Constants.EndDate, Convert.ToDateTime(endDate));
-            if (_collection != null)
-            {
-                var output = _collection.Find(filter).ToList();
-                _outputDataTable = convertListToDataTable(output);
-                if (_outputDataTable == null)
-                {
-                    MessageBox.Show("No Results to Display!!!", "Message!!!");
-                }
-            }
-            else
-            {
-                MessageBox.Show("The Collection is Empty.", "Message!!!");
-            }
-        }
-
-        private void backgroundWorkerLoadData_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            // this runs on the UI thread
-            Loading_Off();
-            dataGridViewZarkov.DataSource = _outputDataTable;
-        }
-
-        private void textBoxPort_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBoxPort_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            const char Delete = (char)8;
-            e.Handled = !char.IsDigit(e.KeyChar) && e.KeyChar != Delete;
-        }
-
         private void backgroundWorkerConnectServer_DoWork(object sender, DoWorkEventArgs e)
         {
             if (this.labelStatusDesc.InvokeRequired)
@@ -303,7 +203,7 @@ namespace ZarkovDataInformer
             var port = Convert.ToString(comboBoxValues[1]);
             if (String.IsNullOrEmpty(port) || String.IsNullOrEmpty(serverName))
             {
-                MessageBox.Show("Connection Failed!!\nPlease select the server name from drop down and enter server port in the box. Then, Try again.", "Error!!!");
+                MessageBox.Show("[Error] : Connection Failed!!\nPlease select the server name from drop down and enter server port in the box.", "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 e.Cancel = true;
                 return;
             }
@@ -368,6 +268,73 @@ namespace ZarkovDataInformer
             }
         }
 
+        private void backgroundWorkerLoadData_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var comboBoxValues = e.Argument as List<object>;
+            var testType = comboBoxValues[0];
+            var endDate = comboBoxValues[1];
+            var builder = Builders<BsonDocument>.Filter;
+            var filter = builder.Eq(Constants.TestType, testType) & builder.Eq(Constants.EndDate, Convert.ToDateTime(endDate));
+            if (_collection != null)
+            {
+                var output = _collection.Find(filter).ToList();
+                _outputDataTable = convertListToDataTable(output);
+                if (_outputDataTable == null)
+                {
+                    MessageBox.Show("No Results to Display!!!", "Message!!!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("The Collection is Empty.", "Message!!!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void backgroundWorkerLoadData_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // this runs on the UI thread
+            loading_Off();
+            dataGridViewZarkov.DataSource = _outputDataTable;
+        }
+
+        private void textBoxPort_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBoxPort_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            const char Delete = (char)8;
+            e.Handled = !char.IsDigit(e.KeyChar) && e.KeyChar != Delete;
+        }
+
+        private void buttonConvertToExcel_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+            saveFileDialog1.Filter = "Excel |*.xlsx";
+            saveFileDialog1.Title = "Save an excel File";
+            saveFileDialog1.ShowDialog();
+
+            // If the file name is not an empty string open it for saving.
+            if (saveFileDialog1.FileName != "")
+            {
+                try
+                {
+                    var workbook = new XLWorkbook();
+                    var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
+                    pictureBoxLoading.Visible = true;
+                    workbook.SaveAs(saveFileDialog1.FileName);
+                    pictureBoxLoading.Visible = false;
+                    MessageBox.Show("Save Successful!!!", "Message!!!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message),"Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+
         /// <summary>
         /// Checks if the port is open in the remote server.
         /// </summary>
@@ -383,9 +350,44 @@ namespace ZarkovDataInformer
             }
             catch (Exception ex)
             {
-                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!");
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
+        }
+
+        private IMongoCollection<BsonDocument> connectServerAndGetCollection(string connection, string dbName, string collection)
+        {
+            try
+            {
+                return new MongoClient(connection).GetDatabase(dbName).GetCollection<BsonDocument>(collection);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+        }
+
+        public DataTable convertListToDataTable(List<BsonDocument> list)
+        {
+            if (list != null && list.Count() > 0)
+            {
+                DataTable dt = new DataTable(list.ToString());
+                foreach (BsonDocument doc in list)
+                {
+                    foreach (BsonElement elm in doc.Elements)
+                    {
+                        if (!dt.Columns.Contains(elm.Name))
+                            dt.Columns.Add(new DataColumn(elm.Name));
+                    }
+                    DataRow dr = dt.NewRow();
+                    foreach (BsonElement elm in doc.Elements)
+                        dr[elm.Name] = elm.Value;
+                    dt.Rows.Add(dr);
+                }
+                return dt;
+            }
+            return null;
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
