@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.label1 = new System.Windows.Forms.Label();
             this.comboBoxSevers = new System.Windows.Forms.ComboBox();
             this.connect_Server = new System.Windows.Forms.Button();
@@ -41,14 +42,20 @@
             this.textBoxPort = new System.Windows.Forms.TextBox();
             this.buttonShowData = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.labelStatus = new System.Windows.Forms.Label();
             this.labelStatusDesc = new System.Windows.Forms.Label();
+            this.labelStatus = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            this.pictureBoxConnecting = new System.Windows.Forms.PictureBox();
+            this.pictureBoxLoading = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewZarkov)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -160,9 +167,12 @@
             // textBoxPort
             // 
             this.textBoxPort.Location = new System.Drawing.Point(127, 36);
+            this.textBoxPort.MaxLength = 5;
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(186, 22);
             this.textBoxPort.TabIndex = 10;
+            this.textBoxPort.TextChanged += new System.EventHandler(this.textBoxPort_TextChanged);
+            this.textBoxPort.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxPort_KeyPress);
             // 
             // buttonShowData
             // 
@@ -205,15 +215,6 @@
             this.splitContainer1.SplitterDistance = 316;
             this.splitContainer1.TabIndex = 12;
             // 
-            // labelStatus
-            // 
-            this.labelStatus.AutoSize = true;
-            this.labelStatus.Location = new System.Drawing.Point(8, 82);
-            this.labelStatus.Name = "labelStatus";
-            this.labelStatus.Size = new System.Drawing.Size(52, 17);
-            this.labelStatus.TabIndex = 11;
-            this.labelStatus.Text = "Status:";
-            // 
             // labelStatusDesc
             // 
             this.labelStatusDesc.AutoSize = true;
@@ -222,6 +223,15 @@
             this.labelStatusDesc.Size = new System.Drawing.Size(108, 17);
             this.labelStatusDesc.TabIndex = 12;
             this.labelStatusDesc.Text = "Not Connected!!";
+            // 
+            // labelStatus
+            // 
+            this.labelStatus.AutoSize = true;
+            this.labelStatus.Location = new System.Drawing.Point(8, 82);
+            this.labelStatus.Name = "labelStatus";
+            this.labelStatus.Size = new System.Drawing.Size(52, 17);
+            this.labelStatus.TabIndex = 11;
+            this.labelStatus.Text = "Status:";
             // 
             // label5
             // 
@@ -232,15 +242,52 @@
             this.label5.TabIndex = 7;
             this.label5.Text = "-------Select Filters-------";
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
+            // 
+            // backgroundWorker2
+            // 
+            this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
+            this.backgroundWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker2_RunWorkerCompleted);
+            // 
+            // pictureBoxConnecting
+            // 
+            this.pictureBoxConnecting.Image = global::ZarkovDataInformer.Properties.Resources.ezgif_com_crop__1_;
+            this.pictureBoxConnecting.Location = new System.Drawing.Point(43, 115);
+            this.pictureBoxConnecting.Name = "pictureBoxConnecting";
+            this.pictureBoxConnecting.Size = new System.Drawing.Size(155, 28);
+            this.pictureBoxConnecting.TabIndex = 13;
+            this.pictureBoxConnecting.TabStop = false;
+            this.pictureBoxConnecting.Visible = false;
+            // 
+            // pictureBoxLoading
+            // 
+            this.pictureBoxLoading.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.pictureBoxLoading.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBoxLoading.Image = global::ZarkovDataInformer.Properties.Resources.load__2_;
+            this.pictureBoxLoading.InitialImage = null;
+            this.pictureBoxLoading.Location = new System.Drawing.Point(451, 258);
+            this.pictureBoxLoading.Name = "pictureBoxLoading";
+            this.pictureBoxLoading.Size = new System.Drawing.Size(131, 130);
+            this.pictureBoxLoading.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBoxLoading.TabIndex = 8;
+            this.pictureBoxLoading.TabStop = false;
+            this.pictureBoxLoading.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1031, 632);
+            this.Controls.Add(this.pictureBoxConnecting);
+            this.Controls.Add(this.pictureBoxLoading);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.buttonShowData);
             this.Controls.Add(this.buttonConvertToExcel);
             this.Controls.Add(this.dataGridViewZarkov);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -252,6 +299,8 @@
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -274,6 +323,10 @@
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Label labelStatusDesc;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.PictureBox pictureBoxLoading;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
+        private System.Windows.Forms.PictureBox pictureBoxConnecting;
     }
 }
 
