@@ -51,6 +51,8 @@
             this.pictureBoxConnecting = new System.Windows.Forms.PictureBox();
             this.tabControl2 = new System.Windows.Forms.TabControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label5 = new System.Windows.Forms.Label();
+            this.labelCount = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewZarkov)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -66,15 +68,16 @@
             this.dataGridViewZarkov.AllowUserToDeleteRows = false;
             this.dataGridViewZarkov.AllowUserToOrderColumns = true;
             this.dataGridViewZarkov.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewZarkov.Location = new System.Drawing.Point(367, 37);
+            this.dataGridViewZarkov.Location = new System.Drawing.Point(367, 62);
             this.dataGridViewZarkov.Name = "dataGridViewZarkov";
             this.dataGridViewZarkov.ReadOnly = true;
             this.dataGridViewZarkov.RowTemplate.Height = 24;
-            this.dataGridViewZarkov.Size = new System.Drawing.Size(1047, 501);
+            this.dataGridViewZarkov.Size = new System.Drawing.Size(1047, 476);
             this.dataGridViewZarkov.TabIndex = 7;
             // 
             // buttonConvertToExcel
             // 
+            this.buttonConvertToExcel.BackColor = System.Drawing.SystemColors.Control;
             this.buttonConvertToExcel.Enabled = false;
             this.buttonConvertToExcel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.buttonConvertToExcel.Location = new System.Drawing.Point(1261, 553);
@@ -82,7 +85,7 @@
             this.buttonConvertToExcel.Size = new System.Drawing.Size(153, 31);
             this.buttonConvertToExcel.TabIndex = 8;
             this.buttonConvertToExcel.Text = "Download as Excel";
-            this.buttonConvertToExcel.UseVisualStyleBackColor = true;
+            this.buttonConvertToExcel.UseVisualStyleBackColor = false;
             this.buttonConvertToExcel.Click += new System.EventHandler(this.buttonConvertToExcel_Click);
             // 
             // backgroundWorkerLoadData
@@ -298,11 +301,30 @@
             this.tabPage2.TabIndex = 0;
             this.tabPage2.Text = "Filters";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(364, 37);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(89, 17);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "Total Count: ";
+            // 
+            // labelCount
+            // 
+            this.labelCount.AutoSize = true;
+            this.labelCount.Location = new System.Drawing.Point(459, 37);
+            this.labelCount.Name = "labelCount";
+            this.labelCount.Size = new System.Drawing.Size(0, 17);
+            this.labelCount.TabIndex = 24;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1442, 597);
+            this.Controls.Add(this.labelCount);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.tabControl2);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.pictureBoxLoading);
@@ -323,6 +345,7 @@
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -349,6 +372,8 @@
         private System.Windows.Forms.TabControl tabControl2;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.PictureBox pictureBoxConnecting;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label labelCount;
     }
 }
 

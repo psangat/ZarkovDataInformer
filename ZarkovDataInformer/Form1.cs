@@ -100,6 +100,7 @@ namespace ZarkovDataInformer
             comboBoxTestType.Enabled = true;
             buttonConvertToExcel.Enabled = true;
             buttonShowData.Enabled = true;
+            labelCount.Text = Convert.ToString(_outputDataTable.Rows.Count);
             Cursor.Current = Cursors.WaitCursor;
         }
 
