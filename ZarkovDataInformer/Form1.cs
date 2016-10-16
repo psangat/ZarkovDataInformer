@@ -1,7 +1,6 @@
 ﻿using ClosedXML.Excel;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,8 +8,7 @@ using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net.Sockets;
 using System.Windows.Forms;
 
 namespace ZarkovDataInformer
@@ -19,7 +17,7 @@ namespace ZarkovDataInformer
     {
         DataTable _outputDataTable = new DataTable();
         IMongoCollection<BsonDocument> _collection = null;
-        Dictionary<string, List<BsonDateTime>> _dataCache = new Dictionary<string, List<BsonDateTime>>();
+        Dictionary<int, Dictionary<string, List<BsonDateTime>>> _dataCache = new Dictionary<int, Dictionary<string, List<BsonDateTime>>>();
         List<string> test_types = new List<string>();
         public Form1()
         {
@@ -33,7 +31,7 @@ namespace ZarkovDataInformer
             pictureBoxConnecting.Visible = true;
             comboBoxSevers.Enabled = false;
             textBoxPort.Enabled = false;
-            connect_Server.Enabled = false;
+            //connect_Server.Enabled = false;
             Cursor.Current = Cursors.Arrow;
         }
 
@@ -44,22 +42,59 @@ namespace ZarkovDataInformer
             pictureBoxConnecting.Visible = false;
             comboBoxSevers.Enabled = false;
             textBoxPort.Enabled = false;
-            connect_Server.Enabled = false;
+            //connect_Server.Enabled = false;
             comboBoxEndDate.Enabled = true;
             comboBoxTestType.Enabled = true;
             buttonShowData.Enabled = true;
             labelStatusDesc.Text = "Connected!!";
+            labelStatusDesc.ForeColor = Color.Green;
+            connect_Server.Text = "Disconnect";
             Cursor.Current = Cursors.WaitCursor;
 
         }
 
+        private void connect_Server_Cancel()
+        {
+            pictureBoxConnecting.Visible = false;
+            comboBoxSevers.Enabled = true;
+            textBoxPort.Enabled = true;
+            connect_Server.Enabled = true;
+            labelStatusDesc.Text = "Failed!!";
+            labelStatusDesc.ForeColor = Color.DarkRed;
+        }
+
+        private void disconnect_Server()
+        {
+            pictureBoxConnecting.Visible = false;
+            comboBoxSevers.Enabled = true;
+            textBoxPort.Enabled = true;
+            connect_Server.Enabled = true;
+            // comboBoxEndDate.DataSource = new List<BsonDateTime>();
+            comboBoxEndDate.Enabled = false;
+            // comboBoxTestType.DataSource = new List<string>();
+            comboBoxTestType.Enabled = false;
+            buttonShowData.Enabled = false;
+            labelStatusDesc.Text = "Not Connected!!";
+            labelStatusDesc.ForeColor = Color.DarkRed;
+            connect_Server.Text = "Connect";
+        }
+
         private void connect_Server_Click(object sender, EventArgs e)
         {
-            connect_Server_On();
-            List<object> items = new List<object>();
-            items.Add(comboBoxSevers.SelectedIndex);
-            items.Add(textBoxPort.Text);
-            backgroundWorker2.RunWorkerAsync(items);
+            if (connect_Server.Text.Equals("Connect"))
+            {
+                connect_Server_On();
+                var servers = comboBoxSevers.SelectedItem == null ? comboBoxSevers.Text : comboBoxSevers.SelectedItem.ToString(); 
+                List<object> items = new List<object>();
+                items.Add(servers);
+                items.Add(textBoxPort.Text);
+                backgroundWorker2.RunWorkerAsync(items);
+            }
+            else if (connect_Server.Text.Equals("Disconnect"))
+            {
+                disconnect_Server();
+            }
+
         }
 
         private IMongoCollection<BsonDocument> connectServerAndGetCollection(string connection, string dbName, string collection)
@@ -78,6 +113,7 @@ namespace ZarkovDataInformer
         private void Loading_On()
         {
             Cursor.Current = Cursors.WaitCursor;
+            dataGridViewZarkov.DataSource = new DataTable();
             pictureBoxLoading.Visible = true;
             comboBoxEndDate.Enabled = false;
             comboBoxTestType.Enabled = false;
@@ -142,27 +178,44 @@ namespace ZarkovDataInformer
             List<object> items = new List<object>();
             items.Add(comboBoxTestType.SelectedItem);
             items.Add(comboBoxEndDate.SelectedItem);
-            backgroundWorker1.RunWorkerAsync(items);
+            backgroundWorkerLoadData.RunWorkerAsync(items);
 
         }
 
         private void comboBoxTestType_SelectedIndexChanged(object sender, EventArgs e)
         {
+            var port = Convert.ToInt16(textBoxPort.Text);
             var test_type = comboBoxTestType.SelectedItem;
             var filter = new BsonDocument().Add(Constants.TestType, test_type.ToString());
-            if (_dataCache.ContainsKey(test_type.ToString()))
+            if (_dataCache.ContainsKey(port))
             {
-                var top10_Sorted_Dates = _dataCache[test_type.ToString()];
-                comboBoxEndDate.DataSource = top10_Sorted_Dates;
+                if (_dataCache[port].ContainsKey(test_type.ToString()))
+                {
+                    var top10_Sorted_Dates = _dataCache[port][test_type.ToString()];
+                    comboBoxEndDate.DataSource = top10_Sorted_Dates;
+                }
+                else
+                {
+                    var end_dates = _collection.Distinct<BsonDateTime>(Constants.EndDate, filter).ToList();
+                    var sorted_Dates = from element in end_dates
+                                       orderby element descending
+                                       select element;
+                    var top10_Sorted_Dates = sorted_Dates.Take(10).ToList();
+                    _dataCache[port].Add(test_type.ToString(), top10_Sorted_Dates);
+                    comboBoxEndDate.DataSource = top10_Sorted_Dates;
+                }
+                
             }
             else
             {
+                Dictionary<string, List<BsonDateTime>> data = new Dictionary<string, List<BsonDateTime>>();
                 var end_dates = _collection.Distinct<BsonDateTime>(Constants.EndDate, filter).ToList();
                 var sorted_Dates = from element in end_dates
                                    orderby element descending
                                    select element;
                 var top10_Sorted_Dates = sorted_Dates.Take(10).ToList();
-                _dataCache.Add(test_type.ToString(), top10_Sorted_Dates);
+                data.Add(test_type.ToString(), top10_Sorted_Dates);
+                _dataCache.Add(port, data);
                 comboBoxEndDate.DataSource = top10_Sorted_Dates;
             }
         }
@@ -193,7 +246,7 @@ namespace ZarkovDataInformer
             }
         }
 
-        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        private void backgroundWorkerLoadData_DoWork(object sender, DoWorkEventArgs e)
         {
             var comboBoxValues = e.Argument as List<object>;
             var testType = comboBoxValues[0];
@@ -215,7 +268,7 @@ namespace ZarkovDataInformer
             }
         }
 
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void backgroundWorkerLoadData_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             // this runs on the UI thread
             Loading_Off();
@@ -233,47 +286,111 @@ namespace ZarkovDataInformer
             e.Handled = !char.IsDigit(e.KeyChar) && e.KeyChar != Delete;
         }
 
-        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        private void backgroundWorkerConnectServer_DoWork(object sender, DoWorkEventArgs e)
         {
             if (this.labelStatusDesc.InvokeRequired)
             {
-                this.labelStatusDesc.BeginInvoke((MethodInvoker)delegate() { this.labelStatusDesc.Text = "Connecting ..."; });
+                this.labelStatusDesc.BeginInvoke((MethodInvoker)delegate () { this.labelStatusDesc.Text = "Connecting ..."; this.labelStatusDesc.ForeColor = Color.CadetBlue; });
             }
             else
             {
                 this.labelStatusDesc.Text = "Connecting ...";
+                this.labelStatusDesc.ForeColor = Color.CadetBlue;
             }
 
             var comboBoxValues = e.Argument as List<object>;
-            var index = Convert.ToInt16(comboBoxValues[0]);
+            var serverName = Convert.ToString(comboBoxValues[0]);
             var port = Convert.ToString(comboBoxValues[1]);
-            if (String.IsNullOrEmpty(port) || index == -1)
+            if (String.IsNullOrEmpty(port) || String.IsNullOrEmpty(serverName))
             {
                 MessageBox.Show("Connection Failed!!\nPlease select the server name from drop down and enter server port in the box. Then, Try again.", "Error!!!");
-                /*comboBoxSevers.Enabled = true;
-                textBoxPort.Enabled = true;
-                connect_Server.Enabled = true;*/
                 e.Cancel = true;
                 return;
             }
-            else if (index == 0) // Mulgrave Server
+            else if (serverName.Equals("Mulgrave Server")) // Mulgrave Server
             {
-                string conn = String.Format(@"mongodb://{0}:{1}", ConfigurationSettings.AppSettings.Get("MulgraveDBConectionString"), port);
-                _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
-                loadFields();
+                var server = ConfigurationSettings.AppSettings.Get("MulgraveDBConectionString");
+                if (isPortAvailable(server, Convert.ToInt16(port)))
+                {
+                    string conn = String.Format(@"mongodb://{0}:{1}", server, port);
+                    _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
+                    loadFields();
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
             }
-            else if (index == 1) // COS Server
+            else if (serverName.Equals("COS Server")) // COS Server
             {
-                string conn = String.Format(@"mongodb://{0}:{1}", ConfigurationSettings.AppSettings.Get("COSDBConectionString"), port);
-                _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
-                loadFields();
+                var server = ConfigurationSettings.AppSettings.Get("COSDBConectionString");
+                if (isPortAvailable(server, Convert.ToInt16(port)))
+                {
+                    string conn = String.Format(@"mongodb://{0}:{1}", server, port);
+                    _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
+                    loadFields();
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            else
+            {
+                if (isPortAvailable(serverName, Convert.ToInt16(port)))
+                {
+                    string conn = String.Format(@"mongodb://{0}:{1}", serverName, port);
+                    _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
+                    loadFields();
+                }
+                else
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
             }
         }
 
-        private void backgroundWorker2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void backgroundWorkerConnectServer_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            // this runs on the UI thread
-            connect_Server_Off();
+
+            if (e.Cancelled)
+            {
+                connect_Server_Cancel();
+            }
+            else
+            {
+                // this runs on the UI thread
+                connect_Server_Off();
+            }
+        }
+
+        /// <summary>
+        /// Checks if the port is open in the remote server.
+        /// </summary>
+        /// <param name="_HostURI"></param>
+        /// <param name="_PortNumber"></param>
+        /// <returns>boolean</returns>
+        private bool isPortAvailable(string _HostURI, int _PortNumber)
+        {
+            try
+            {
+                TcpClient client = new TcpClient(_HostURI, _PortNumber);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!");
+                return false;
+            }
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
