@@ -33,7 +33,6 @@
             this.buttonConvertToExcel = new System.Windows.Forms.Button();
             this.backgroundWorkerLoadData = new System.ComponentModel.BackgroundWorker();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.pictureBoxLoading = new System.Windows.Forms.PictureBox();
             this.labelStatusDesc = new System.Windows.Forms.Label();
             this.labelStatus = new System.Windows.Forms.Label();
             this.comboBoxSevers = new System.Windows.Forms.ComboBox();
@@ -48,18 +47,20 @@
             this.comboBoxTestType = new System.Windows.Forms.ComboBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.pictureBoxConnecting = new System.Windows.Forms.PictureBox();
             this.tabControl2 = new System.Windows.Forms.TabControl();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.label5 = new System.Windows.Forms.Label();
             this.labelCount = new System.Windows.Forms.Label();
+            this.buttonInfo = new System.Windows.Forms.Button();
+            this.pictureBoxConnecting = new System.Windows.Forms.PictureBox();
+            this.pictureBoxLoading = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewZarkov)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).BeginInit();
             this.tabControl2.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridViewZarkov
@@ -67,6 +68,11 @@
             this.dataGridViewZarkov.AllowUserToAddRows = false;
             this.dataGridViewZarkov.AllowUserToDeleteRows = false;
             this.dataGridViewZarkov.AllowUserToOrderColumns = true;
+            this.dataGridViewZarkov.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridViewZarkov.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.ColumnHeader;
+            this.dataGridViewZarkov.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllHeaders;
             this.dataGridViewZarkov.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewZarkov.Location = new System.Drawing.Point(367, 62);
             this.dataGridViewZarkov.Name = "dataGridViewZarkov";
@@ -77,6 +83,7 @@
             // 
             // buttonConvertToExcel
             // 
+            this.buttonConvertToExcel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonConvertToExcel.BackColor = System.Drawing.SystemColors.Control;
             this.buttonConvertToExcel.Enabled = false;
             this.buttonConvertToExcel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -97,20 +104,6 @@
             // 
             this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorkerConnectServer_DoWork);
             this.backgroundWorker2.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorkerConnectServer_RunWorkerCompleted);
-            // 
-            // pictureBoxLoading
-            // 
-            this.pictureBoxLoading.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.pictureBoxLoading.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBoxLoading.Image = global::ZarkovDataInformer.Properties.Resources.load__2_;
-            this.pictureBoxLoading.InitialImage = null;
-            this.pictureBoxLoading.Location = new System.Drawing.Point(873, 236);
-            this.pictureBoxLoading.Name = "pictureBoxLoading";
-            this.pictureBoxLoading.Size = new System.Drawing.Size(131, 130);
-            this.pictureBoxLoading.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pictureBoxLoading.TabIndex = 8;
-            this.pictureBoxLoading.TabStop = false;
-            this.pictureBoxLoading.Visible = false;
             // 
             // labelStatusDesc
             // 
@@ -143,6 +136,7 @@
             this.comboBoxSevers.Name = "comboBoxSevers";
             this.comboBoxSevers.Size = new System.Drawing.Size(240, 24);
             this.comboBoxSevers.TabIndex = 15;
+            this.comboBoxSevers.Text = "localhost";
             // 
             // textBoxPort
             // 
@@ -151,6 +145,7 @@
             this.textBoxPort.Name = "textBoxPort";
             this.textBoxPort.Size = new System.Drawing.Size(240, 22);
             this.textBoxPort.TabIndex = 18;
+            this.textBoxPort.Text = "27017";
             // 
             // label1
             // 
@@ -250,6 +245,7 @@
             // tabPage1
             // 
             this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage1.Controls.Add(this.buttonInfo);
             this.tabPage1.Controls.Add(this.pictureBoxConnecting);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.labelStatusDesc);
@@ -265,20 +261,10 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Connect To Server";
             // 
-            // pictureBoxConnecting
-            // 
-            this.pictureBoxConnecting.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.pictureBoxConnecting.Image = global::ZarkovDataInformer.Properties.Resources.ezgif_com_crop__1_;
-            this.pictureBoxConnecting.ImageLocation = "";
-            this.pictureBoxConnecting.Location = new System.Drawing.Point(117, 153);
-            this.pictureBoxConnecting.Name = "pictureBoxConnecting";
-            this.pictureBoxConnecting.Size = new System.Drawing.Size(74, 24);
-            this.pictureBoxConnecting.TabIndex = 22;
-            this.pictureBoxConnecting.TabStop = false;
-            this.pictureBoxConnecting.Visible = false;
-            // 
             // tabControl2
             // 
+            this.tabControl2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.tabControl2.Controls.Add(this.tabPage2);
             this.tabControl2.Location = new System.Drawing.Point(18, 293);
             this.tabControl2.Name = "tabControl2";
@@ -318,6 +304,52 @@
             this.labelCount.Size = new System.Drawing.Size(0, 17);
             this.labelCount.TabIndex = 24;
             // 
+            // buttonInfo
+            // 
+            this.buttonInfo.FlatAppearance.BorderSize = 0;
+            this.buttonInfo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonInfo.Image = global::ZarkovDataInformer.Properties.Resources.rsz_infobox_info_iconsvg;
+            this.buttonInfo.Location = new System.Drawing.Point(277, 85);
+            this.buttonInfo.Name = "buttonInfo";
+            this.buttonInfo.Size = new System.Drawing.Size(26, 24);
+            this.buttonInfo.TabIndex = 23;
+            this.buttonInfo.UseVisualStyleBackColor = true;
+            this.buttonInfo.Click += new System.EventHandler(this.buttonInfo_Click);
+            // 
+            // pictureBoxConnecting
+            // 
+            this.pictureBoxConnecting.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBoxConnecting.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBoxConnecting.Image = global::ZarkovDataInformer.Properties.Resources.ezgif_com_crop__1_;
+            this.pictureBoxConnecting.ImageLocation = "";
+            this.pictureBoxConnecting.Location = new System.Drawing.Point(103, 153);
+            this.pictureBoxConnecting.Margin = new System.Windows.Forms.Padding(10);
+            this.pictureBoxConnecting.Name = "pictureBoxConnecting";
+            this.pictureBoxConnecting.Padding = new System.Windows.Forms.Padding(10);
+            this.pictureBoxConnecting.Size = new System.Drawing.Size(111, 34);
+            this.pictureBoxConnecting.TabIndex = 22;
+            this.pictureBoxConnecting.TabStop = false;
+            this.pictureBoxConnecting.Visible = false;
+            // 
+            // pictureBoxLoading
+            // 
+            this.pictureBoxLoading.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.pictureBoxLoading.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.pictureBoxLoading.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.pictureBoxLoading.Image = global::ZarkovDataInformer.Properties.Resources.load__2_;
+            this.pictureBoxLoading.InitialImage = null;
+            this.pictureBoxLoading.Location = new System.Drawing.Point(861, 176);
+            this.pictureBoxLoading.Name = "pictureBoxLoading";
+            this.pictureBoxLoading.Size = new System.Drawing.Size(208, 200);
+            this.pictureBoxLoading.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBoxLoading.TabIndex = 8;
+            this.pictureBoxLoading.TabStop = false;
+            this.pictureBoxLoading.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -336,14 +368,14 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Zarkov Data Informer";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewZarkov)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).EndInit();
             this.tabControl2.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxConnecting)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLoading)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -374,6 +406,7 @@
         private System.Windows.Forms.PictureBox pictureBoxConnecting;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label labelCount;
+        private System.Windows.Forms.Button buttonInfo;
     }
 }
 

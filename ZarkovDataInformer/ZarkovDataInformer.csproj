@@ -111,6 +111,8 @@
     <Content Include="Images\logo.ico" />
     <Content Include="Images\icon.png" />
     <Content Include="Images\load %282%29.gif" />
+    <None Include="Resources\rsz_infobox_info_iconsvg.png" />
+    <None Include="Resources\info.png" />
     <None Include="Resources\search-btn.png" />
     <None Include="Resources\ezgif.com-crop %281%29.gif" />
     <None Include="Resources\loading %281%29.gif" />

@@ -1,6 +1,7 @@
 ﻿using ClosedXML.Excel;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -19,6 +20,8 @@ namespace ZarkovDataInformer
         IMongoCollection<BsonDocument> _collection = null;
         Dictionary<int, Dictionary<string, List<BsonDateTime>>> _dataCache = new Dictionary<int, Dictionary<string, List<BsonDateTime>>>();
         List<string> test_types = new List<string>();
+        Dictionary<string, object> columns = new Dictionary<string, object>();
+        string col = string.Empty;
 
         public Form1()
         {
@@ -32,7 +35,6 @@ namespace ZarkovDataInformer
             pictureBoxConnecting.Visible = true;
             comboBoxSevers.Enabled = false;
             textBoxPort.Enabled = false;
-            //connect_Server.Enabled = false;
             Cursor.Current = Cursors.Arrow;
         }
 
@@ -43,7 +45,6 @@ namespace ZarkovDataInformer
             pictureBoxConnecting.Visible = false;
             comboBoxSevers.Enabled = false;
             textBoxPort.Enabled = false;
-            //connect_Server.Enabled = false;
             comboBoxEndDate.Enabled = true;
             comboBoxTestType.Enabled = true;
             buttonShowData.Enabled = true;
@@ -70,9 +71,7 @@ namespace ZarkovDataInformer
             comboBoxSevers.Enabled = true;
             textBoxPort.Enabled = true;
             connect_Server.Enabled = true;
-            // comboBoxEndDate.DataSource = new List<BsonDateTime>();
             comboBoxEndDate.Enabled = false;
-            // comboBoxTestType.DataSource = new List<string>();
             comboBoxTestType.Enabled = false;
             buttonShowData.Enabled = false;
             labelStatusDesc.Text = "Not Connected!!";
@@ -104,7 +103,7 @@ namespace ZarkovDataInformer
             Cursor.Current = Cursors.WaitCursor;
         }
 
-        private void loadFields()
+        private void load_Fields()
         {
             var filter = new BsonDocument();
             try
@@ -114,10 +113,6 @@ namespace ZarkovDataInformer
             catch (Exception ex)
             {
                 MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-
             }
         }
 
@@ -171,7 +166,7 @@ namespace ZarkovDataInformer
                     _dataCache[port].Add(test_type.ToString(), top10_Sorted_Dates);
                     comboBoxEndDate.DataSource = top10_Sorted_Dates;
                 }
-                
+
             }
             else
             {
@@ -215,7 +210,7 @@ namespace ZarkovDataInformer
                 {
                     string conn = String.Format(@"mongodb://{0}:{1}", server, port);
                     _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
-                    loadFields();
+                    load_Fields();
                 }
                 else
                 {
@@ -230,7 +225,7 @@ namespace ZarkovDataInformer
                 {
                     string conn = String.Format(@"mongodb://{0}:{1}", server, port);
                     _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
-                    loadFields();
+                    load_Fields();
                 }
                 else
                 {
@@ -244,7 +239,7 @@ namespace ZarkovDataInformer
                 {
                     string conn = String.Format(@"mongodb://{0}:{1}", serverName, port);
                     _collection = connectServerAndGetCollection(conn, "agilent", "zarkov");
-                    loadFields();
+                    load_Fields();
                 }
                 else
                 {
@@ -330,7 +325,7 @@ namespace ZarkovDataInformer
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message),"Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -368,22 +363,37 @@ namespace ZarkovDataInformer
                 return null;
             }
         }
-
+        
         public DataTable convertListToDataTable(List<BsonDocument> list)
         {
             if (list != null && list.Count() > 0)
             {
                 DataTable dt = new DataTable(list.ToString());
+
                 foreach (BsonDocument doc in list)
                 {
-                    foreach (BsonElement elm in doc.Elements)
-                    {
-                        if (!dt.Columns.Contains(elm.Name))
-                            dt.Columns.Add(new DataColumn(elm.Name));
-                    }
                     DataRow dr = dt.NewRow();
                     foreach (BsonElement elm in doc.Elements)
-                        dr[elm.Name] = elm.Value;
+                    {
+                        if (elm.Value is BsonDocument || elm.Value is BsonArray)
+                        {
+                            columns.Clear();
+                            createColumnHeaderAndData(elm);
+                            foreach (var colm in columns)
+                            {
+                                if (!dt.Columns.Contains(colm.Key.ToString()))
+                                    dt.Columns.Add(new DataColumn(colm.Key.ToString()));
+                                dr[colm.Key] = colm.Value;
+                            }
+                        }
+                        else
+                        {
+                            if (!dt.Columns.Contains(elm.Name))
+                                dt.Columns.Add(new DataColumn(elm.Name));
+                            dr[elm.Name] = elm.Value;
+
+                        }
+                    }
                     dt.Rows.Add(dr);
                 }
                 return dt;
@@ -391,9 +401,56 @@ namespace ZarkovDataInformer
             return null;
         }
 
+        private string createColumnHeaderAndData(BsonElement ele)
+        {
+            if (ele.Value is BsonDocument)
+            {
+                BsonDocument bsd = (BsonDocument)ele.Value;
+                foreach (BsonElement elem in bsd.Elements)
+                {
+                    col = ele.Name + "_" + createColumnHeaderAndData(elem);
+                    if (col.Substring(col.Length - 1, 1).Equals("_"))
+                    {
+                        // do not include the rubbish item
+                        col = string.Empty;
+                    }
+                    else
+                    {
+                        columns.Add(col, elem.Value);
+                        col = string.Empty;
+                    }
+                }
+            }
+            else if (ele.Value is BsonArray)
+            {
+                BsonArray bsa = (BsonArray)ele.Value;
+                int totalItems = bsa.Count();
+                for (int i = 0; i < totalItems; i++)
+                {
+                    BsonDocument bsd = bsa.ElementAt(i).ToBsonDocument();
+                    foreach (BsonElement elem in bsd.Elements)
+                    {
+                        col = ele.Name + "_" + i + "_" + createColumnHeaderAndData(elem);
+                        columns.Add(col, elem.Value);
+                        col = string.Empty;
+                    }
+                }
+            }
+            else
+            {
+                return ele.Name;
+            }
+            return string.Empty;
+        }
+
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void buttonInfo_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("Mulgrave Server: \nPorts Range: 4430 - 4454\n\nCOS Server:\nPort: 5555\n\nAlso accepts users host and port.", "Available Ports!!! ", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

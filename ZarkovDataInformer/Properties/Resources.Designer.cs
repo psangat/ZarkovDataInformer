@@ -83,6 +83,16 @@ namespace ZarkovDataInformer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap info {
+            get {
+                object obj = ResourceManager.GetObject("info", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap load__2_ {
             get {
                 object obj = ResourceManager.GetObject("load (2)", resourceCulture);
@@ -96,6 +106,16 @@ namespace ZarkovDataInformer.Properties {
         internal static System.Drawing.Bitmap loading__1_ {
             get {
                 object obj = ResourceManager.GetObject("loading (1)", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap rsz_infobox_info_iconsvg {
+            get {
+                object obj = ResourceManager.GetObject("rsz_infobox_info_iconsvg", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
