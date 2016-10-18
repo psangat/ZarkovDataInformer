@@ -323,26 +323,12 @@ namespace ZarkovDataInformer
                         case 1:
                             var workbook = new XLWorkbook();
                             var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
-                            pictureBoxLoading.Visible = true;
                             workbook.SaveAs(saveFileDialog1.FileName);
-                            pictureBoxLoading.Visible = false;
                             break;
 
                         case 2:
-                            var lines = new List<string>();
-                            string[] columnNames = _outputDataTable.Columns.Cast<DataColumn>().
-                                             Select(column => column.ColumnName).
-                                             ToArray();
-
-                            var header = string.Join(",", columnNames);
-                            lines.Add(header);
-
-                            var valueLines = _outputDataTable.AsEnumerable()
-                                               .Select(row => string.Join(",", row.ItemArray));
-                            lines.AddRange(valueLines);
-                            pictureBoxLoading.Visible = true;
+                            List<String> lines = ToCSV(_outputDataTable);
                             File.WriteAllLines(saveFileDialog1.FileName, lines);
-                            pictureBoxLoading.Visible = false;
                             break;
                     }
                     MessageBox.Show("Save Successful!!!", "Message!!!", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -352,6 +338,20 @@ namespace ZarkovDataInformer
             {
                 MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private List<string> ToCSV(DataTable dt)
+        {
+            var lines = new List<string>();
+            string[] columnNames = dt.Columns.Cast<DataColumn>().
+                             Select(column => column.ColumnName).
+                             ToArray();
+            var header = string.Join(",", columnNames);
+            lines.Add(header);
+            var valueLines = dt.AsEnumerable()
+                               .Select(row => string.Join(",", row.ItemArray));
+            lines.AddRange(valueLines);
+            return lines;
         }
 
 
