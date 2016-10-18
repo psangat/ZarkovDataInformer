@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Windows.Forms;
@@ -86,7 +87,7 @@ namespace ZarkovDataInformer
             pictureBoxLoading.Visible = true;
             comboBoxEndDate.Enabled = false;
             comboBoxTestType.Enabled = false;
-            buttonConvertToExcel.Enabled = false;
+            buttonDownload.Enabled = false;
             buttonShowData.Enabled = false;
             Cursor.Current = Cursors.Arrow;
         }
@@ -97,7 +98,7 @@ namespace ZarkovDataInformer
             pictureBoxLoading.Visible = false;
             comboBoxEndDate.Enabled = true;
             comboBoxTestType.Enabled = true;
-            buttonConvertToExcel.Enabled = true;
+            buttonDownload.Enabled = true;
             buttonShowData.Enabled = true;
             labelCount.Text = Convert.ToString(_outputDataTable.Rows.Count);
             Cursor.Current = Cursors.WaitCursor;
@@ -304,29 +305,52 @@ namespace ZarkovDataInformer
             e.Handled = !char.IsDigit(e.KeyChar) && e.KeyChar != Delete;
         }
 
-        private void buttonConvertToExcel_Click(object sender, EventArgs e)
+        private void buttonDownload_Click(object sender, EventArgs e)
         {
-            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-            saveFileDialog1.Filter = "Excel |*.xlsx";
-            saveFileDialog1.Title = "Save an excel File";
-            saveFileDialog1.ShowDialog();
-
-            // If the file name is not an empty string open it for saving.
-            if (saveFileDialog1.FileName != "")
+            try
             {
-                try
+                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+                saveFileDialog1.Filter = "Excel |*.xlsx|CSV |*.csv";
+                saveFileDialog1.Title = "Save File";
+                saveFileDialog1.ShowDialog();
+
+                // If the file name is not an empty string open it for saving.
+                if (saveFileDialog1.FileName != "")
                 {
-                    var workbook = new XLWorkbook();
-                    var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
-                    pictureBoxLoading.Visible = true;
-                    workbook.SaveAs(saveFileDialog1.FileName);
-                    pictureBoxLoading.Visible = false;
+
+                    switch (saveFileDialog1.FilterIndex)
+                    {
+                        case 1:
+                            var workbook = new XLWorkbook();
+                            var worksheet = workbook.Worksheets.Add(_outputDataTable, "Data Sheet");
+                            pictureBoxLoading.Visible = true;
+                            workbook.SaveAs(saveFileDialog1.FileName);
+                            pictureBoxLoading.Visible = false;
+                            break;
+
+                        case 2:
+                            var lines = new List<string>();
+                            string[] columnNames = _outputDataTable.Columns.Cast<DataColumn>().
+                                             Select(column => column.ColumnName).
+                                             ToArray();
+
+                            var header = string.Join(",", columnNames);
+                            lines.Add(header);
+
+                            var valueLines = _outputDataTable.AsEnumerable()
+                                               .Select(row => string.Join(",", row.ItemArray));
+                            lines.AddRange(valueLines);
+                            pictureBoxLoading.Visible = true;
+                            File.WriteAllLines(saveFileDialog1.FileName, lines);
+                            pictureBoxLoading.Visible = false;
+                            break;
+                    }
                     MessageBox.Show("Save Successful!!!", "Message!!!", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format("[Error]: {0}", ex.Message), "Error!!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -363,7 +387,7 @@ namespace ZarkovDataInformer
                 return null;
             }
         }
-        
+
         public DataTable convertListToDataTable(List<BsonDocument> list)
         {
             if (list != null && list.Count() > 0)
@@ -452,5 +476,6 @@ namespace ZarkovDataInformer
         {
             MessageBox.Show("Mulgrave Server: \nPorts Range: 4430 - 4454\n\nCOS Server:\nPort: 5555\n\nAlso accepts users host and port.", "Available Ports!!! ", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
     }
 }
